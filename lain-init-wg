@@ -11,8 +11,9 @@ mkdir -p "$netns"
 
 cat > "$netns/interface.conf" <<EOF
 [Interface]
-PrivateKey = $(wg genkey | tee "$netns/privatekey" | wg pubkey > "$netns/publickey")
+PrivateKey = $(wg genkey | tee "$netns/privatekey")
 EOF
+wg pubkey < "$netns/privatekey" > "$netns/publickey"
 
 printf "public key: %s\n" "$(cat "$netns/publickey")"
 
