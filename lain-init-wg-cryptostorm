@@ -1,0 +1,92 @@
+#!/bin/bash
+# see https://cryptostorm.is/wg_confgen.txt
+declare -a nodes=(
+"austria:S5ymECx1eYP9g3CH9SSRKWC40TnfccBqjNjkC2Y6ljo="
+"belgium:qdG2OTZYTcgUfvk96NYGy2q137AF6tlOsf1C7HHR6xo="
+"brazil:Z+UMUQdQKUIXOtTwd2aF59mu2ZLk+Xsrh93Xu37Vhgc="
+"bulgaria:5JBGYHJx5cZMRWHot4yKd5fPuH7cvGupppO4p97WfQk="
+"montreal:w8+i77Jy0/rVVXe3jGa93Yu1nbAEZiysTJb9T4QsCiw="
+"vancouver:oRDFg9PmkpiukA99BM0yewysFHJpDHdVcIhsqZLCTUk="
+"czech:FB/YP7iTtOL4F1SyqpPlmLOqq53UgtCMxvvkwL3ikgs="
+"denmark:lk7absUUo7RB02hWB3BwTaGaXMvdb5jzqYqaYQIQyRs="
+"london:6QhRDWSN8rXW9xOdWLZdEa6LexOrkAQ6fsIcQ8/1CgA="
+"manchester:iOcQr4Ekh78MSJ4EHQ2FKWI07KIeiGGToKYU7YvtegU="
+"finland:CsDyFuVn2/C5WMQgIdG6Eahns8LK7TAJ+QW8IWS+P0A="
+"paris:8yHSuRSwQo9cV16WeoXs70nHD+ContK1R/Hw9a1N5Fc="
+"berlin:qXuD0iXh3WK0maEkseBXwDbD2R5cya4zdXN3DfXCtxk="
+"dusseldorf:YRmPp4zG+2+T+WEOdTGw2W8qVSRZjXmHUW8XEuufGUg="
+"frankfurt:e4eYphS0h806X85fzrUHHuD9Jl4dJqYhkyl4lYnuFwI="
+"hungary:D7wwy7vCFMMoqRYz0UaIgpun4uurmvIrAgLTFRnXDFU="
+"iceland:Au/fpRa/6gXHsi1ek0f5ro59EbTXS3orn/wiLa5L1UM="
+"india:7B0FmpKxXbj4P2iuAYIO/jAYCRqIDkhoYPbe6KgcYTc="
+"ireland:1Z9elWomdXhqC0ABtMOtYkXNOD63o5YPl+yvKvhWTVw="
+"milan:za7b6xUpnMKHJWQSIgwkKH0fnyysP7Kuk+5/thWjj1A="
+"rome:ZVAtV1QeZw8O/lBfyx8ejx5yT0tL86t1SrjmED658xw="
+"latvia:tmmOD6BSpZeN8U7MCiCuWKoPN2E0qSVWtY1dTuByejA="
+"mexico:y7S9gJspnFOeeg0dI/opr6NBxjdkmuwbyjN13czuJCk="
+"moldova:1Oo4+CgZKKNsWOVm5ZSyxUGg67Ro5RLZU5Jg2NUWnAg="
+"netherlands:Nmcl36PHFmDDLyJP/AJtw6vUxIx4zMav/EiJ+TPeelQ="
+"norway:aH1lVBSm0VvAt5OPc2YIWZaG5m8vvlonuu6dUxiNhCk="
+"poland:aSwlPgmRUnq6SfG8ksdzRv/lVlQ4O12rQ9pheVTNCQU="
+"portugal:9/12+NNjr78h+wNEmJHGagW27DOG4ayKSymYE+ZcUlU="
+"romania:6JjesN/UEaJdyBSkp1oJzqmsTPqB5Dwmv+iMRkKbsRM="
+"serbia:1VbRfEKdVdgH52ZTy3PHofCZMlyPhGFsyIdegf/BO1I="
+"slovakia:DNow8FFZpUxZcTGgVeVgbck1QF5MD5lkK5WhdWQzbHk="
+"sk:443XPAL0fYNtD9zFI7S8XcoB3diY68jKIbh6oB9T3Rk="
+"barcelona:bdTlu8Dd+KdOGr8huExOjDUbXfPsdeCWtQPSfSIOPCE="
+"madrid:UT/RLqoNwoTAv8nh2eAeznXR7WdX7Ld4I+TFdYeh3gg="
+"sweden:OKnEZSODUaUWL81+r/l5cbHJbfvwJAX0SgTqXQXL60E="
+"switzerland:H/XmmJYiSKSkEcCkhhB3pDfRlm9tfHOYkjFI+crjrGQ="
+"sydney:sSlPK/5wKMmNn4EnZBvr3at+UZJo0N+DtfePMdMMYRA="
+"tokyo:dIn4t7lKnPqtmj+Dl6UmreBQXJou99zJ8BPiai8djQc="
+"la:O3XwQl4+/ZIrqXJgKiXWWK+26+z+KHYL1GaCTX6/TSg="
+"dc:Vspvv1C5C/JAAcoysAdGzHUz98V0vYXLl8a5Yv3Xa3g="
+"florida:XYIg/q1hGyZ/8rRHgt2wKO4WtObzCyA4f8C8nMZWIA8="
+"atlanta:EZZUsR5l+Oe47s5900Q1JamvMYF6HB2Dbs6+ZAhXAzU="
+"chicago:ZQlqH2OjXnI7vhrc4HwSv9l1i8riD78p2hhmz+7bCj4="
+"vegas:wwQ63AoaSxBm1K9zCwl2XSmvwI8ADIx3Qponm1+AbWQ="
+"maine:lUN2Vqs+CswowhSS81X0cdkfMZe3hLnr0HznBegvilc="
+"newyork:IfiYOThU72ivKQncq1+jhQXYs6F2wBtZsUPHaeCccyA="
+"nc:s2ozcv7uGcvryYUs460wUE6xeouR+I2kqOjJvag91zI="
+"oregon:lUN2Vqs+CswowhSS81X0cdkfMZe3hLnr0HznBegvilc="
+"dallas:qrZ3+Jp0y2+eYlOE0heVBfFzcHhuWJ31Y5UF/mHQLRA="
+"seattle:3bHLNdTY/9AETg9OKgTsab+SjRitGqB+o4BH4gkzux8="
+)
+
+set -e
+umask 077
+
+# generate key
+privatekey="$(mktemp)"
+printf "public key: %s\n" "$(wg genkey | tee "$privatekey" | wg pubkey)"
+
+printf "preshared key: "
+read -r psk
+printf "enter interface address (cidr): "
+read -r address
+
+for node in "${nodes[@]}"; do
+	host="$(cut -d : -f 1 <<< "$node")"
+	pubk="$(cut -d : -f 2 <<< "$node")"
+
+	netns="/etc/lain/wg/cs-$host"
+	mkdir -p "$netns"
+
+	cat > "$netns/interface.conf" <<EOF
+[Interface]
+PrivateKey = $(cat "$privatekey")
+EOF
+
+	cat > "$netns/peer.conf" <<EOF
+[Peer]
+PublicKey = ${pubk}
+Presharedkey= ${psk}
+AllowedIPs = 0.0.0.0/0
+EndPoint = ${host}.cstorm.is:443
+PersistentKeepalive = 25
+EOF
+
+	echo "$address" > "$netns/address"
+done
+
+rm "$privatekey"
