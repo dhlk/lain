@@ -1,0 +1,33 @@
+#!/bin/bash
+set -e
+umask 077
+
+if [[ ! "$1" =~ ^[a-z0-9\-]{1,15}$ ]]; then
+	echo "must provide a valid lain-wg instance name (regexp ^[a-z0-9\-]{1,15}$)"
+fi
+
+netns="/etc/lain/wg/$1"; shift
+mkdir -p "$netns"
+
+cat > "$netns/interface.conf" <<EOF
+[Interface]
+PrivateKey = $(wg genkey | tee "$netns/privatekey" | wg pubkey > "$netns/publickey")
+EOF
+
+printf "public key: %s\n" "$(cat "$netns/publickey")"
+
+printf "enter interface address (cidr): "
+read -r address
+printf "enter server public key: "
+read -r publickey
+printf "enter endpoint address (ip:port): "
+read -r endpoint
+
+cat > "$netns/peer.conf" <<EOF
+[Peer]
+PublicKey = $publickey
+AllowedIPs = 0.0.0.0/0
+EndPoint = $endpoint
+EOF
+
+echo "$address" > "$netns/address"
