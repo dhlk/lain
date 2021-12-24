@@ -7,17 +7,18 @@ shift
 
 ip netns add "$namespace"
 ip link add "$namespace" type wireguard
-ip link set "$namespace" netns "$namespace"
-ip -n "$namespace" link set "$namespace" name wg0
 
 while [ $# -gt 0 ]; do
 	if [ "$1" == ':' ]; then
 		shift
 		break
 	fi
-	ip netns exec "$namespace" wg addconf wg0 "$1"
+	wg addconf "$namespace" "$1"
 	shift
 done
+
+ip link set "$namespace" netns "$namespace"
+ip -n "$namespace" link set "$namespace" name wg0
 
 while [ $# -gt 0 ]; do
 	while read -r cidr; do
