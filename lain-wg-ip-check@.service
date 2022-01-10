@@ -4,6 +4,7 @@ BindsTo=lain-wg@%i.service
 After=lain-wg@%i.service
 
 [Service]
+SyslogIdentifier=lain-wg-ip-check@%i
 ExecStart=/usr/bin/curl -s https://myip.wtf/json
 NetworkNamespacePath=/run/netns/%i
 RuntimeMaxSec=8s

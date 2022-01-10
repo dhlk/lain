@@ -5,6 +5,7 @@ Description=lain wireguard vpn %i
 WantedBy=default.target
 
 [Service]
+SyslogIdentifier=lain-wg@%i
 Type=oneshot
 RemainAfterExit=yes
 
