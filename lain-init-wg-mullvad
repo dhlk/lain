@@ -90,4 +90,4 @@ EOF
 	jq -r '.ipv4_address' "$assoc" > "$netns/address"
 done
 
-rm "$account" "$assoc" "$privatekey"
+rm "$serverlist" "$account" "$assoc" "$privatekey"
