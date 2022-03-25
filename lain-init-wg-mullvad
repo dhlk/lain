@@ -1,0 +1,93 @@
+#!/bin/bash
+set -e
+umask 077
+
+# retreive server list
+serverlist="$(mktemp)"
+status="$(curl --config - <<EOF
+silent
+output="$serverlist"
+url="https://api.mullvad.net/www/relays/wireguard/"
+write-out="%{http_code}"
+EOF
+)"
+if [[ "$rc" -ne 0 || "$status" -ne 200 || ! -s "$serverlist" ]]; then
+	rm "$serverlist"
+	echo 'failed to retreive server list' 1>&2
+	exit 1
+fi
+
+# prompt for mullvad account
+printf 'enter mulvad account number: '
+read -r accountNumber
+
+# retreive account authorization
+account="$(mktemp)"
+status="$(curl --config - <<EOF
+silent
+output="$account"
+url="https://api.mullvad.net/www/accounts/$accountNumber/"
+write-out="%{http_code}"
+EOF
+)"
+rc=$?
+
+if [[ "$rc" -ne 0 || "$status" -ne 200 || ! -s "$account" ]]; then
+	rm "$account"
+	echo 'failed to retreive account details' 1>&2
+	exit 1
+fi
+
+# generate key
+privatekey="$(mktemp)"
+publickey="$(wg genkey | tee "$privatekey" | wg pubkey)"
+
+# register key and receive associations
+# note - no preshared key
+assoc="$(mktemp)"
+data="$(mktemp)"; jq -n '{$pubkey}' --arg pubkey "$publickey" > "$data"
+status="$(curl --config - <<EOF
+silent
+output="$assoc"
+request="POST"
+url="https://api.mullvad.net/www/wg-pubkeys/add/"
+header="Content-Type: application/json"
+write-out="%{http_code}"
+header="Authorization: Token $(jq -r .auth_token "$account")"
+data="@$data"
+EOF
+)"
+rc=$?
+rm "$data"
+
+if [[ "$rc" -ne 0 || "$status" -ne 201 || ! -s "$assoc" ]]; then
+	rm "$account" "$assoc"
+	echo 'failed to register public key' 1>&2
+	exit 1
+fi
+
+# generate configs for each region
+jq -r '.[].hostname | sub("-wireguard$"; "")' "$serverlist" | while read -r region; do
+	host="$(jq -r '.[] | select(.hostname == $host + "-wireguard").ipv4_addr_in' --arg host "$region" "$serverlist")"
+	pubk="$(jq -r '.[] | select(.hostname == $host + "-wireguard").pubkey' --arg host "$region" "$serverlist")"
+
+	netns="/etc/lain/wg/mullvad-$region"
+	mkdir -p "$netns"
+
+	cat > "$netns/interface.conf" << EOF
+[Interface]
+PrivateKey = $(cat "$privatekey")
+EOF
+
+	cat > "$netns/peer.conf" <<EOF
+[Peer]
+PublicKey = ${pubk}
+AllowedIPs = 0.0.0.0/0
+EndPoint = ${host}:51820
+PersistentKeepalive = 25
+EOF
+
+	jq -r '.ipv4_address' "$assoc" > "$netns/address"
+done
+
+rm "$account" "$assoc" "$privatekey"
