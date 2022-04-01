@@ -84,7 +84,6 @@ EOF
 PublicKey = ${pubk}
 AllowedIPs = 0.0.0.0/0
 EndPoint = ${host}:51820
-PersistentKeepalive = 25
 EOF
 
 	jq -r '.ipv4_address' "$assoc" > "$netns/address"
