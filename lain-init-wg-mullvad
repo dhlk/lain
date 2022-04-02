@@ -19,7 +19,7 @@ fi
 
 # prompt for mullvad account
 printf 'enter mulvad account number: '
-read -r accountNumber
+read -rs accountNumber
 
 # retreive account authorization
 account="$(mktemp)"
