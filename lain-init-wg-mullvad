@@ -17,9 +17,8 @@ if [[ "$rc" -ne 0 || "$status" -ne 200 || ! -s "$serverlist" ]]; then
 	exit 1
 fi
 
-# prompt for prefix
-printf 'enter prefix: '
-read -rs prefix
+# generate prefix
+prefix="$1"
 if [[ -n prefix ]]; then
 	prefix='mullvad-'
 else
@@ -29,6 +28,7 @@ fi
 # prompt for mullvad account
 printf 'enter mulvad account number: '
 read -rs accountNumber
+printf '\n'
 
 # retreive account authorization
 account="$(mktemp)"
