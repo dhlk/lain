@@ -20,9 +20,9 @@ fi
 # generate prefix
 prefix="$1"
 if [[ -n "$prefix" ]]; then
-	prefix='mullvad-'
-else
 	prefix="mullvad-$prefix"
+else
+	prefix='mullvad-'
 fi
 
 # prompt for mullvad account
