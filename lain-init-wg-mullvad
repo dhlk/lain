@@ -85,7 +85,7 @@ jq -r '.[].hostname | sub("-wireguard$"; "")' "$serverlist" | while read -r regi
 
 	cat > "$netns/interface.conf" << EOF
 [Interface]
-PrivateKey = $(cat "$privatekey")
+PrivateKey = $(<"$privatekey")
 EOF
 
 	cat > "$netns/peer.conf" <<EOF

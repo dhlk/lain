@@ -74,7 +74,7 @@ for node in "${nodes[@]}"; do
 
 	cat > "$netns/interface.conf" <<EOF
 [Interface]
-PrivateKey = $(cat "$privatekey")
+PrivateKey = $(<"$privatekey")
 EOF
 
 	cat > "$netns/peer.conf" <<EOF

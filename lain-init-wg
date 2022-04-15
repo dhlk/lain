@@ -15,7 +15,7 @@ PrivateKey = $(wg genkey | tee "$netns/privatekey")
 EOF
 wg pubkey < "$netns/privatekey" > "$netns/publickey"
 
-printf "public key: %s\n" "$(cat "$netns/publickey")"
+printf "public key: %s\n" "$(<"$netns/publickey")"
 
 printf "enter interface address (cidr): "
 read -r address
