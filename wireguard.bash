@@ -5,20 +5,22 @@ set -e
 namespace="$1"
 shift
 
+link="$(md5sum <<< "$namespace" | cut -c -15)"
+
 ip netns add "$namespace"
-ip link add "$namespace" type wireguard
+ip link add "$link" type wireguard
 
 while [ $# -gt 0 ]; do
 	if [ "$1" == ':' ]; then
 		shift
 		break
 	fi
-	wg addconf "$namespace" "$1"
+	wg addconf "$link" "$1"
 	shift
 done
 
-ip link set "$namespace" netns "$namespace"
-ip -n "$namespace" link set "$namespace" name wg0
+ip link set "$link" netns "$namespace"
+ip -n "$namespace" link set "$link" name wg0
 
 while [ $# -gt 0 ]; do
 	while read -r cidr; do
