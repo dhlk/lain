@@ -18,11 +18,11 @@ wg pubkey < "$netns/privatekey" > "$netns/publickey"
 printf "public key: %s\n" "$(<"$netns/publickey")"
 
 printf "enter interface address (cidr): "
-read -r address
+IFS= read -r address
 printf "enter server public key: "
-read -r publickey
+IFS= read -r publickey
 printf "enter endpoint address (ip:port): "
-read -r endpoint
+IFS= read -r endpoint
 
 cat > "$netns/peer.conf" <<EOF
 [Peer]

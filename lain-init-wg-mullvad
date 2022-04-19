@@ -27,7 +27,7 @@ fi
 
 # prompt for mullvad account
 printf 'enter mulvad account number: '
-read -rs accountNumber
+IFS= read -rs accountNumber
 printf '\n'
 
 # retreive account authorization
@@ -76,7 +76,7 @@ if [[ "$rc" -ne 0 || "$status" -ne 201 || ! -s "$assoc" ]]; then
 fi
 
 # generate configs for each region
-jq -r '.[].hostname | sub("-wireguard$"; "")' "$serverlist" | while read -r region; do
+jq -r '.[].hostname | sub("-wireguard$"; "")' "$serverlist" | while IFS= read -r region; do
 	host="$(jq -r '.[] | select(.hostname == $host + "-wireguard").ipv4_addr_in' --arg host "$region" "$serverlist")"
 	pubk="$(jq -r '.[] | select(.hostname == $host + "-wireguard").pubkey' --arg host "$region" "$serverlist")"
 

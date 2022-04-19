@@ -23,7 +23,7 @@ ip link set "$link" netns "$namespace"
 ip -n "$namespace" link set "$link" name wg0
 
 while [ $# -gt 0 ]; do
-	while read -r cidr; do
+	while IFS= read -r cidr; do
 		ip -n "$namespace" addr add "$cidr" dev wg0
 	done < "$1"
 	shift

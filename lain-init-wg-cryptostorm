@@ -61,9 +61,9 @@ privatekey="$(mktemp)"
 printf "public key: %s\n" "$(wg genkey | tee "$privatekey" | wg pubkey)"
 
 printf "preshared key: "
-read -r psk
+IFS= read -rs psk
 printf "enter interface address (cidr): "
-read -r address
+IFS= read -r address
 
 for node in "${nodes[@]}"; do
 	host="$(cut -d : -f 1 <<< "$node")"
