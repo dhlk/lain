@@ -3,7 +3,8 @@ set -e
 umask 077
 
 if [[ ! "$1" =~ ^[a-z0-9\-]{1,15}$ ]]; then
-	echo "must provide a valid lain-wg instance name (regexp ^[a-z0-9\-]{1,15}$)"
+	echo "must provide a valid lain-wg instance name (regexp ^[a-z0-9\-]{1,15}$)" 1>&2
+	exit 1
 fi
 
 netns="/etc/lain/wg/$1"; shift
