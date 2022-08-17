@@ -69,7 +69,7 @@ for node in "${nodes[@]}"; do
 	host="$(cut -d : -f 1 <<< "$node")"
 	pubk="$(cut -d : -f 2 <<< "$node")"
 
-	netns="/etc/lain/wg/cs-$host"
+	netns="/etc/lain/wg/cryptostorm/$host"
 	mkdir -p "$netns"
 
 	cat > "$netns/interface.conf" <<EOF
