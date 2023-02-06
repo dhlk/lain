@@ -1,0 +1,9 @@
+[Unit]
+Description=reinitialize configurations for lain mullvad wg key %i daily
+
+[Install]
+WantedBy=timers.target
+
+[Timer]
+OnCalendar=daily
+RandomizedDelaySec=1h

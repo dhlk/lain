@@ -10,26 +10,32 @@ fi
 netns="/etc/lain/wg/$1"; shift
 mkdir -p "$netns"
 
-cat > "$netns/interface.conf" <<EOF
-[Interface]
-PrivateKey = $(wg genkey | tee "$netns/privatekey")
-EOF
-wg pubkey < "$netns/privatekey" > "$netns/publickey"
+# generate key
+privatekey="$(mktemp)"
+publickey="$(wg genkey | tee "$privatekey" | wg pubkey)"
 
-printf "public key: %s\n" "$(<"$netns/publickey")"
-
+# manual exchange
+printf "public key: %s\n" "$publickey"
 printf "enter interface address (cidr): "
 IFS= read -r address
 printf "enter server public key: "
-IFS= read -r publickey
+IFS= read -r peerkey
 printf "enter endpoint address (ip:port): "
 IFS= read -r endpoint
 
-cat > "$netns/peer.conf" <<EOF
+# write config
+systemd-creds encrypt - "$netns/interface.conf" <<EOF
+[Interface]
+PrivateKey = $(<"$privatekey")
+EOF
+
+systemd-creds encrypt - "$netns/peer.conf" <<EOF
 [Peer]
-PublicKey = $publickey
+PublicKey = $peerkey
 AllowedIPs = 0.0.0.0/0
 EndPoint = $endpoint
 EOF
 
-echo "$address" > "$netns/address"
+systemd-creds encrypt - "$netns/address" <<< "$address"
+
+rm "$privatekey"

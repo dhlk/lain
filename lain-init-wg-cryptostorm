@@ -72,12 +72,12 @@ for node in "${nodes[@]}"; do
 	netns="/etc/lain/wg/cryptostorm/$host"
 	mkdir -p "$netns"
 
-	cat > "$netns/interface.conf" <<EOF
+	systemd-creds encrypt - "$netns/interface.conf" <<EOF
 [Interface]
 PrivateKey = $(<"$privatekey")
 EOF
 
-	cat > "$netns/peer.conf" <<EOF
+	systemd-creds encrypt - "$netns/peer.conf" <<EOF
 [Peer]
 PublicKey = ${pubk}
 Presharedkey= ${psk}
@@ -86,7 +86,7 @@ EndPoint = ${host}.cstorm.is:443
 PersistentKeepalive = 25
 EOF
 
-	echo "$address" > "$netns/address"
+	systemd-creds encrypt - "$netns/address" <<< "$address"
 done
 
 rm "$privatekey"

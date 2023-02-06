@@ -1,28 +1,14 @@
 #!/bin/bash
 set -e
 umask 077
-
-# retreive server list
-serverlist="$(mktemp)"
-status="$(curl --config - <<EOF
-silent
-output="$serverlist"
-url="https://api.mullvad.net/www/relays/wireguard/"
-write-out="%{http_code}"
-EOF
-)"
-if [[ "$rc" -ne 0 || "$status" -ne 200 || ! -s "$serverlist" ]]; then
-	rm "$serverlist"
-	echo 'failed to retreive server list' 1>&2
+if ! prefix="$(readlink -m "/etc/lain/wg/mullvad/$1")"; then
+	echo 'bad prefix' 1>&2
 	exit 1
 fi
 
-# generate prefix
-prefix="$1"
-if [[ -n "$prefix" ]]; then
-	prefix="mullvad/$prefix"
-else
-	prefix='mullvad'
+if ! [[ "$prefix" == '/etc/lain/wg/mullvad' || "$prefix" =~ ^/etc/lain/wg/mullvad/ ]]; then
+	echo 'prefix escape' 1>&2
+	exit 1
 fi
 
 # prompt for mullvad account
@@ -45,6 +31,30 @@ if [[ "$rc" -ne 0 || "$status" -ne 200 || ! -s "$account" ]]; then
 	rm "$account"
 	echo 'failed to retreive account details' 1>&2
 	exit 1
+fi
+
+# revoke previos key
+if [[ -s "$prefix/.register/pubkey" ]]; then
+	data="$(mktemp)"; jq -n '{$pubkey}' --arg pubkey "$(systemd-creds decrypt "$prefix/.register/pubkey" -)" > "$data"
+	status="$(curl --config - <<EOF
+silent
+output="$assoc"
+request="POST"
+url="https://api-www.mullvad.net/www/wg-pubkeys/revoke/"
+header="Content-Type: application/json"
+write-out="%{http_code}"
+header="Authorization: Token $(jq -r .auth_token "$account")"
+data="@$data"
+EOF
+	)"
+	rc=$?
+
+	rm "$data"
+	if [[ "$rc" -ne 0 || "$status" -ne 204 ]]; then
+		rm "$account"
+		echo 'failed to revoke public key' 1>&2
+		exit 1
+	fi
 fi
 
 # generate key
@@ -75,28 +85,15 @@ if [[ "$rc" -ne 0 || "$status" -ne 201 || ! -s "$assoc" ]]; then
 	exit 1
 fi
 
-# generate configs for each region
-jq -r '.[].hostname' "$serverlist" | while IFS= read -r node; do
-	host="$(jq -r '.[] | select(.hostname == $node).ipv4_addr_in' --arg node "$node" "$serverlist")"
-	pubk="$(jq -r '.[] | select(.hostname == $node).pubkey' --arg node "$node" "$serverlist")"
-
-	netns="/etc/lain/wg/${prefix}/${node}"
-	mkdir -p "$netns"
-
-	cat > "$netns/interface.conf" << EOF
+mkdir -p "$prefix/.register"
+systemd-creds encrypt - "$prefix/.register/pubkey" <<< "$publickey"
+systemd-creds encrypt - "$prefix/.register/address" <<< "$(jq -r '.ipv4_address' "$assoc")"
+systemd-creds encrypt - "$prefix/.register/interface.conf" << EOF
 [Interface]
 PrivateKey = $(<"$privatekey")
 EOF
 
-	cat > "$netns/peer.conf" <<EOF
-[Peer]
-PublicKey = ${pubk}
-AllowedIPs = 0.0.0.0/0
-EndPoint = ${host}:51820
-PersistentKeepalive = 25
-EOF
+rm "$account" "$assoc" "$privatekey"
 
-	jq -r '.ipv4_address' "$assoc" > "$netns/address"
-done
-
-rm "$serverlist" "$account" "$assoc" "$privatekey"
+# generate configs
+lain-reinit-wg-mullvad "$@"

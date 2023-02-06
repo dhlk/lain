@@ -1,0 +1,51 @@
+#!/bin/bash
+set -e
+umask 077
+if ! prefix="$(readlink -m "/etc/lain/wg/mullvad/$1")"; then
+	echo 'bad prefix' 1>&2
+	exit 1
+fi
+
+if ! [[ "$prefix" == '/etc/lain/wg/mullvad' || "$prefix" =~ ^/etc/lain/wg/mullvad/ ]]; then
+	echo 'prefix escape' 1>&2
+	exit 1
+fi
+
+# drop old configs
+find "$prefix" -mindepth 1 -not -path '*.register*' -delete
+
+# retreive server list
+serverlist="$(mktemp)"
+status="$(curl --config - <<EOF
+silent
+output="$serverlist"
+url="https://api.mullvad.net/www/relays/wireguard/"
+write-out="%{http_code}"
+EOF
+)"
+if [[ "$rc" -ne 0 || "$status" -ne 200 || ! -s "$serverlist" ]]; then
+	rm "$serverlist"
+	echo 'failed to retreive server list' 1>&2
+	exit 1
+fi
+
+# generate configs for each region
+jq -r '.[].hostname' "$serverlist" | while IFS= read -r node; do
+	host="$(jq -r '.[] | select(.hostname == $node).ipv4_addr_in' --arg node "$node" "$serverlist")"
+	pubk="$(jq -r '.[] | select(.hostname == $node).pubkey' --arg node "$node" "$serverlist")"
+
+	netns="${prefix}/${node}"
+	mkdir -p "$netns"
+
+	cp --reflink=auto "$prefix/.register/address" "$netns/address"
+	cp --reflink=auto "$prefix/.register/interface.conf" "$netns/interface.conf"
+	systemd-creds encrypt - "$netns/peer.conf" <<EOF
+[Peer]
+PublicKey = ${pubk}
+AllowedIPs = 0.0.0.0/0
+EndPoint = ${host}:51820
+PersistentKeepalive = 25
+EOF
+done
+
+rm "$serverlist"

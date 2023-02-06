@@ -10,12 +10,12 @@ Type=oneshot
 RemainAfterExit=yes
 
 ExecStartPre=-/usr/bin/ip netns delete %i
-ExecStart=/usr/lib/lain/wireguard.bash %i "${CREDENTIALS_DIRECTORY}/interface" "${CREDENTIALS_DIRECTORY}/peer" : "${CREDENTIALS_DIRECTORY}/address"
+ExecStart=/usr/lib/lain/wireguard.bash %i "${CREDENTIALS_DIRECTORY}/interface.conf" "${CREDENTIALS_DIRECTORY}/peer.conf" : "${CREDENTIALS_DIRECTORY}/address"
 ExecStop=/usr/bin/ip netns delete %i
 
-LoadCredential=interface:/etc/lain/wg/%i/interface.conf
-LoadCredential=peer:/etc/lain/wg/%i/peer.conf
-LoadCredential=address:/etc/lain/wg/%i/address
+LoadCredentialEncrypted=interface.conf:/etc/lain/wg/%i/interface.conf
+LoadCredentialEncrypted=peer.conf:/etc/lain/wg/%i/peer.conf
+LoadCredentialEncrypted=address:/etc/lain/wg/%i/address
 
 RestartSec=10s
 Restart=on-failure
